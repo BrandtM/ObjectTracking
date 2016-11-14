@@ -40,6 +40,7 @@ int main(void)
 			break;
 		}
 
+		imshow("Source", frame);
 		cvtColor(frame, frame, COLOR_BGR2GRAY);
 		detectAndDisplay(frame);
 
