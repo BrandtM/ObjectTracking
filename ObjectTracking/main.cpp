@@ -4,36 +4,70 @@
 #include "opencv2/highgui.hpp"
 
 #include <cstdio>
+using namespace cv;
 
+
+
+Mat src, src_gray;
+Mat dst, detected_edges;
+
+int edgeThresh = 1;
+int lowThreshold;
+int const max_lowThreshold = 100;
+int ratio = 3;
+int kernel_size = 3;
+char* window_name = "Edge Map";
+
+
+/**
+* @function CannyThreshold
+* @brief Trackbar callback - Canny thresholds input with a ratio 1:3
+*/
+void CannyThreshold(int, void*)
+{
+	/// Reduce noise with a kernel 3x3
+	//blur(src_gray, detected_edges, Size(size * 2 + 1, size * 2 + 1));
+	GaussianBlur(src_gray, detected_edges, Size(3, 3), 2, 0);
+
+	/// Canny detector
+	Canny(detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, 3);
+
+	/// Using Canny's output as a mask, we display our result
+	dst = Scalar::all(0);
+
+	src.copyTo(dst, detected_edges);
+	imshow(window_name, dst);
+}
+
+
+/** @function main */
 int main(int argc, char** argv)
 {
-	cv::Mat image, grayImage, gradient, gradient_x, gradient_y, abs_gradient_x, abs_gradient_y;
-	const char* windowName = "Image window";
-	image = cv::imread("image3.jpg", cv::IMREAD_COLOR); // Read the file
-	int sobelScale = 1, sobelDelta = 0, sobelDepth = 3;
+	/// Load an image
+	src = imread("image3.jpg");
 
-	if (!image.data) // Check for invalid input
+	if (!src.data)
 	{
-		printf("Could not open or find the image\n");
 		return -1;
 	}
 
-	cv::GaussianBlur(image, image, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
-	cv::cvtColor(image, grayImage, cv::COLOR_RGB2GRAY);
+	/// Create a matrix of the same type and size as src (for dst)
+	dst.create(src.size(), src.type());
 
-	// Horizontal edge detection
-	cv::Sobel(grayImage, gradient_x, sobelDepth, 1, 0, 1, sobelScale, sobelDelta, cv::BORDER_DEFAULT);
-	cv::convertScaleAbs(gradient_x, abs_gradient_x);
+	/// Convert the image to grayscale
+	cvtColor(src, src_gray, CV_BGR2GRAY);
 
-	// Vertical edge detection
-	cv::Sobel(grayImage, gradient_y, sobelDepth, 0, 1, 1, sobelScale, sobelDelta, cv::BORDER_DEFAULT);
-	cv::convertScaleAbs(gradient_y, abs_gradient_y);
+	/// Create a window
+	namedWindow(window_name, CV_WINDOW_AUTOSIZE);
 
-	cv::addWeighted(abs_gradient_x, 0.5, abs_gradient_y, 0.5, 0, gradient);
+	/// Create a Trackbar for user to enter threshold
+	createTrackbar("Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold);
 
-	cv::namedWindow(windowName, cv::WINDOW_NORMAL); // Create a window for display.
-	imshow(windowName, gradient); // Show our image inside it.
+	/// Show the image
+	CannyThreshold(0, 0);
 
-	cv::waitKey(0); // Wait for a keystroke in the window
+	/// Wait until user exit program by pressing a key
+	waitKey(0);
+
 	return 0;
 }
