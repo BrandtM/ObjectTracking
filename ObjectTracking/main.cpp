@@ -76,22 +76,25 @@ void detectAndDisplay(cv::Mat frame)
 
 	/// Draw polygonal contour + bonding rects + circles
 	cv::Mat drawing = cv::Mat::zeros(threshold_output.size(), CV_8UC3);
+
+
 	int min = INT_MAX;
+
+	// center[k] will be center of tracking object
 	int k = 0;
+
 	for (int i = 0; i< contours.size(); i++)
 	{
 		cv::Scalar color = cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-		//drawContours(drawing, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point());
-		//rectangle(drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0);
 		circle(drawing, center[i], (int)radius[i], color, 2, 8, 0);
 		
+		// finding object wchich has minimal distance to previously tracked object
 		auto dist = cv::sqrt((center[i].x - lastPos.x)*(center[i].x - lastPos.x) + (center[i].y - lastPos.y)*(center[i].y - lastPos.y));
 		if(dist < min)
 		{
 			min = dist;
 			k = i;
 		}
-
 	}
 
 	/// Show in a window
