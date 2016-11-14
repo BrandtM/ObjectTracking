@@ -1,73 +1,53 @@
-#include "opencv2/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/imgcodecs.hpp"
+#include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/imgcodecs.hpp"
 
-#include <cstdio>
+#include <iostream>
+#include <stdio.h>
+
+using namespace std;
 using namespace cv;
 
+/** Function Headers */
+void detectAndDisplay(Mat frame);
 
-
-Mat src, src_gray;
-Mat dst, detected_edges;
-
-int edgeThresh = 1;
-int lowThreshold;
-int const max_lowThreshold = 100;
-int ratio = 3;
-int kernel_size = 3;
-char* window_name = "Edge Map";
-
-
-/**
-* @function CannyThreshold
-* @brief Trackbar callback - Canny thresholds input with a ratio 1:3
-*/
-void CannyThreshold(int, void*)
-{
-	/// Reduce noise with a kernel 3x3
-	//blur(src_gray, detected_edges, Size(size * 2 + 1, size * 2 + 1));
-	GaussianBlur(src_gray, detected_edges, Size(3, 3), 2, 0);
-
-	/// Canny detector
-	Canny(detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, 3);
-
-	/// Using Canny's output as a mask, we display our result
-	dst = Scalar::all(0);
-
-	src.copyTo(dst, detected_edges);
-	imshow(window_name, dst);
-}
-
+/** Global variables */
+String window_name = "Object Tracking";
+String edges_window = "Edges";
 
 /** @function main */
-int main(int argc, char** argv)
+int main(void)
 {
-	/// Load an image
-	src = imread("image3.jpg");
+	VideoCapture capture("video.mp4");
+	Mat frame;
 
-	if (!src.data)
+	if (!capture.isOpened()) { printf("--(!)Error opening video capture\n"); return -1; }
+
+	while (capture.read(frame))
 	{
-		return -1;
+		if (frame.empty())
+		{
+			printf(" --(!) No captured frame -- Break!");
+			break;
+		}
+
+		//-- 3. Apply the classifier to the frame
+		detectAndDisplay(frame);
+
+		int c = waitKey(20);
+		if ((char)c == 27) { break; } // escape
 	}
-
-	/// Create a matrix of the same type and size as src (for dst)
-	dst.create(src.size(), src.type());
-
-	/// Convert the image to grayscale
-	cvtColor(src, src_gray, CV_BGR2GRAY);
-
-	/// Create a window
-	namedWindow(window_name, CV_WINDOW_AUTOSIZE);
-
-	/// Create a Trackbar for user to enter threshold
-	createTrackbar("Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold);
-
-	/// Show the image
-	CannyThreshold(0, 0);
-
-	/// Wait until user exit program by pressing a key
-	waitKey(0);
-
 	return 0;
+}
+
+/** @function detectAndDisplay */
+void detectAndDisplay(Mat frame)
+{
+	Mat edges;
+	Canny(frame, edges, 150, 450);
+
+	imshow(window_name, frame);
+	imshow(edges_window, edges);
 }
