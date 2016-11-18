@@ -8,10 +8,11 @@
 #include <stdio.h>
 
 /** Function Headers */
-void detectAndDisplay(cv::Mat frame);
+void detectAndDisplay(cv::Mat);
 void skipToFrame(int, void*);
-void playFromFrame(int);
-cv::Mat translateImg(cv::Mat &img, int offsetx, int offsety);
+void playVideo();
+cv::Mat translateImg(cv::Mat &, int, int);
+void onMouse(int, int, int, int, void*);
 
 /** Global variables */
 cv::String window_name = "Object Tracking";
@@ -43,11 +44,14 @@ int main(void)
 	cv::createTrackbar("Threshold:", window_name, &thresh, max_thresh);
 	cv::createTrackbar("Frame:", window_name, &current_frame, max_frames, skipToFrame);
 
+	cv::setMouseCallback(window_name, onMouse);
+
 	skipToFrame(0, nullptr);
 	for (;;)
 	{
 		int key = cv::waitKey(20);
-		if ((char)key == 32) playFromFrame(current_frame);
+		if ((char)key == 32) playVideo();
+
 	}
 
 	cv::waitKey(0);
@@ -63,15 +67,17 @@ void skipToFrame(int frame, void* data)
 	cv::imshow(window_name, image);
 }
 
-void playFromFrame(int frameNo)
+void playVideo()
 {
 	cv::Mat frame;
 
-	capture.set(cv::CAP_PROP_POS_FRAMES, frameNo);
-	if (!playback_state) 
+	while(true)
 	{
-		while (capture.read(frame))
+		while (capture.read(frame) && !playback_state)
 		{
+			int key = cv::waitKey(20);
+			if ((char)key == 32) return;
+
 			if (frame.empty())
 			{
 				printf(" --(!) No captured frame -- Break!");
@@ -86,7 +92,6 @@ void playFromFrame(int frameNo)
 			if ((char)c == 27) { break; } // escape
 		}
 	}
-	printf("playing\n");
 }
 
 void detectAndDisplay(cv::Mat frame)
@@ -102,14 +107,12 @@ void detectAndDisplay(cv::Mat frame)
 
 	/// Approximate contours to polygons + get bounding rects and circles
 	std::vector<std::vector<cv::Point> > contours_poly(contours.size());
-	std::vector<cv::Rect> boundRect(contours.size());
 	std::vector<cv::Point2f>center(contours.size());
 	std::vector<float>radius(contours.size());
 
 	for (int i = 0; i < contours.size(); i++)
 	{
 		approxPolyDP(cv::Mat(contours[i]), contours_poly[i], 3, true);
-		boundRect[i] = boundingRect(cv::Mat(contours_poly[i]));
 		minEnclosingCircle((cv::Mat)contours_poly[i], center[i], radius[i]);
 	}
 
@@ -149,8 +152,17 @@ void detectAndDisplay(cv::Mat frame)
 		
 }
 
-cv::Mat translateImg(cv::Mat &img, int offsetx, int offsety) {
+cv::Mat translateImg(cv::Mat &img, int offsetx, int offsety) 
+{
 	cv::Mat trans_mat = (cv::Mat_<double>(2, 3) << 1, 0, offsetx, 0, 1, offsety);
 	warpAffine(img, img, trans_mat, img.size());
 	return trans_mat;
+}
+
+void onMouse(int event, int x, int y, int flags, void* data)
+{
+	if(event == cv::EVENT_LBUTTONDOWN)
+	{
+		
+	}
 }
