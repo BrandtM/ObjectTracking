@@ -18,7 +18,7 @@ cv::String window_name = "Object Tracking";
 cv::String edges_window = "Edges";
 cv::VideoCapture capture;
 
-int thresh = 100;
+int thresh = 130;
 int max_thresh = 255;
 int current_frame = 0;
 int max_frames = 0;
@@ -39,26 +39,11 @@ int main(void)
 	while (capture.grab())
 		max_frames++;
 
-	//while (capture.read(frame))
-	//{
-	//	if (frame.empty())
-	//	{
-	//		printf(" --(!) No captured frame -- Break!");
-	//		break;
-	//	}
-
-	//	cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-	//	detectAndDisplay(frame);
-	//	cv::imshow("Source", frame);
-
-	//	int c = cv::waitKey(20);
-	//	if ((char)c == 27) { break; } // escape
-	//}
-
 	cv::namedWindow(window_name);
 	cv::createTrackbar("Threshold:", window_name, &thresh, max_thresh);
 	cv::createTrackbar("Frame:", window_name, &current_frame, max_frames, skipToFrame);
 
+	skipToFrame(0, nullptr);
 	for (;;)
 	{
 		int key = cv::waitKey(20);
@@ -74,16 +59,34 @@ void skipToFrame(int frame, void* data)
 	cv::Mat image;
 	capture.set(cv::CAP_PROP_POS_FRAMES, frame);
 	capture.read(image);
+	cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::imshow(window_name, image);
 }
 
-void playFromFrame(int frame)
+void playFromFrame(int frameNo)
 {
+	cv::Mat frame;
+
+	capture.set(cv::CAP_PROP_POS_FRAMES, frameNo);
 	if (!playback_state) 
 	{
-		// TODO: implement
+		while (capture.read(frame))
+		{
+			if (frame.empty())
+			{
+				printf(" --(!) No captured frame -- Break!");
+				break;
+			}
+
+			cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+			detectAndDisplay(frame);
+			cv::imshow(window_name, frame);
+
+			int c = cv::waitKey(20);
+			if ((char)c == 27) { break; } // escape
+		}
 	}
-	printf("(not) playing\n");
+	printf("playing\n");
 }
 
 void detectAndDisplay(cv::Mat frame)
