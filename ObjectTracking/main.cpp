@@ -51,7 +51,7 @@ int main(void)
 		else if ((char)key == 27)	// esc
 			video_playback.stop();
 	}
-	printf("fuckface");
+
 	cv::waitKey(0);
 	return 0;
 }
