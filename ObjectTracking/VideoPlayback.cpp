@@ -1,7 +1,7 @@
 #include "VideoPlayback.h"
 #include <opencv2/imgproc.hpp>
 
-extern void detectAndDisplay(cv::Mat);
+extern void stabilize_frame(cv::Mat);
 
 VideoPlayback::VideoPlayback(cv::String filename, cv::String& win_name)
 {
@@ -40,6 +40,17 @@ bool VideoPlayback::is_playing() const
 	return running && playback_state;
 }
 
+cv::Mat VideoPlayback::get_current_frame()
+{
+	cv::Mat img;
+
+	std::lock_guard<std::mutex> guard(mutex);
+	capture.set(cv::CAP_PROP_POS_FRAMES, std::max(1, (int)capture.get(cv::CAP_PROP_POS_FRAMES) - 1));
+	capture.read(img);
+
+	return img;
+}
+
 VideoPlayback::~VideoPlayback()
 {
 	video_thread.join();
@@ -48,11 +59,11 @@ VideoPlayback::~VideoPlayback()
 void VideoPlayback::skip_to_current_frame()
 {
 	cv::Mat image;
+
 	std::lock_guard<std::mutex> guard(mutex);
 	capture.set(cv::CAP_PROP_POS_FRAMES, current_frame);
 	capture.read(image);
-	cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-	detectAndDisplay(image);
+	stabilize_frame(image);
 	cv::imshow(window_name, image);
 }
 
@@ -62,16 +73,15 @@ void VideoPlayback::play_video()
 
 	while (running)
 	{
+		cv::waitKey(20);
 		std::lock_guard<std::mutex> guard(mutex);
 		if (playback_state && capture.read(frame))
 		{
 			if (frame.empty())
 				throw std::runtime_error(" --(!) No captured frame -- Break!");
-
-			cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-			detectAndDisplay(frame);
-			cv::imshow(window_name, frame);
+			
+			stabilize_frame(frame);
+			imshow(window_name, frame);
 		}
-		cv::waitKey(20);
 	}
 }

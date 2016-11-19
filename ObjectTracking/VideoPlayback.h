@@ -20,6 +20,7 @@ public:
 	void stop();						// end video thread
 
 	bool is_playing() const;
+	cv::Mat get_current_frame();
 
 	void skip_to_current_frame();
 
