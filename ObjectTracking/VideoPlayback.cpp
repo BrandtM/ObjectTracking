@@ -22,11 +22,10 @@ bool VideoPlayback::isReady()
 	return ready;
 }
 
-void VideoPlayback::skipToFrame(int frameNo, void* data)
+void VideoPlayback::skipToCurrent()
 {
-	VideoPlayback* vp = (VideoPlayback*)data;
 	cv::Mat image;
-	vp->capture.set(cv::CAP_PROP_POS_FRAMES, frameNo);
-	vp->capture.read(image);
-	cv::imshow(vp->window_name, image);
+	capture.set(cv::CAP_PROP_POS_FRAMES, current_frame);
+	capture.read(image);
+	cv::imshow(window_name, image);
 }

@@ -13,7 +13,7 @@ public:
 
 	VideoPlayback(cv::String filename, cv::String& win_name);
 	bool isReady();
-	static void skipToFrame(int frameNo, void* data);
+	void skipToCurrent();
 
 private:
 	cv::VideoCapture capture;

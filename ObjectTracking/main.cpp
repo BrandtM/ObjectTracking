@@ -23,9 +23,6 @@ VideoPlayback video_playback{ video_filename, window_name };
 
 int thresh = 130;
 int max_thresh = 255;
-int current_frame = 0;
-int max_frames = 0;
-bool playback_state = false;
 
 cv::RNG rng(12345);
 
@@ -40,7 +37,8 @@ int main(void)
 
 	cv::namedWindow(window_name);
 	cv::createTrackbar("Threshold:", window_name, &thresh, max_thresh);
-	cv::createTrackbar("Frame:", window_name, &video_playback.current_frame, video_playback.max_frames, VideoPlayback::skipToFrame, &video_playback);
+	//cv::createTrackbar("Frame:", window_name, &video_playback.current_frame, video_playback.max_frames, VideoPlayback::skipToFrame, &video_playback);
+	cv::createTrackbar("Frame:", window_name, &video_playback.current_frame, video_playback.max_frames, [](int, void*) {video_playback.skipToCurrent(); });
 
 	//cv::setMouseCallback(window_name, onMouse);
 
