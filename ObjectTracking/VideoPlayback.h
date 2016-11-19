@@ -17,7 +17,7 @@ public:
 
 	void play();
 	void pause();
-	void stop();
+	void stop();						// end video thread
 
 	bool is_playing() const;
 
@@ -25,12 +25,12 @@ public:
 
 private:
 	cv::VideoCapture capture;
-	bool playback_state = false;
-	volatile bool running = false; // not sure if it should be volatile (used in thread)
+	bool playback_state = false;		// playing or paused
+	volatile bool running = false;		// not sure if it should be volatile (used in thread)
 	std::string window_name;
 
 	std::thread video_thread;
-	std::mutex mutex;
-	void play_video();
+	std::mutex mutex;					// for current_frame (modifying can occur while playing)
+	void play_video();			
 };
 

@@ -41,14 +41,14 @@ int main(void)
 	for (;;)
 	{
 		int key = cv::waitKey(20);
-		if ((char)key == 32)
+		if ((char)key == 32)		// space
 		{
 			if (video_playback.is_playing())
 				video_playback.pause();
 			else
 				video_playback.play();
 		}
-		else if ((char)key == 27)
+		else if ((char)key == 27)	// esc
 			video_playback.stop();
 	}
 	printf("fuckface");
