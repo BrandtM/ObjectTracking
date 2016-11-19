@@ -48,13 +48,12 @@ VideoPlayback::~VideoPlayback()
 void VideoPlayback::skip_to_current_frame()
 {
 	cv::Mat image;
-	mutex.lock();
+	std::lock_guard<std::mutex> guard(mutex);
 	capture.set(cv::CAP_PROP_POS_FRAMES, current_frame);
 	capture.read(image);
 	cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	detectAndDisplay(image);
 	cv::imshow(window_name, image);
-	mutex.unlock();
 }
 
 void VideoPlayback::play_video()
@@ -63,7 +62,7 @@ void VideoPlayback::play_video()
 
 	while (running)
 	{
-		mutex.lock();
+		std::lock_guard<std::mutex> guard(mutex);
 		if (playback_state && capture.read(frame))
 		{
 			if (frame.empty())
@@ -73,7 +72,6 @@ void VideoPlayback::play_video()
 			detectAndDisplay(frame);
 			cv::imshow(window_name, frame);
 		}
-		mutex.unlock();
 		cv::waitKey(20);
 	}
 }
